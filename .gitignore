@@ -1,0 +1,12 @@
+.venv/
+
+*.pyc
+__pycache__/
+
+instance/
+
+htmlcov/
+
+dist/
+build/
+*.egg-info/
