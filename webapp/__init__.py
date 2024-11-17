@@ -21,5 +21,6 @@ def create_app(test_config=None):
     
     from . import page
     app.register_blueprint(page.bp)
+    app.add_url_rule('/', endpoint='page')
 
     return app
