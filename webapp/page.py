@@ -1,3 +1,4 @@
+#import time
 import pandas as pd
 import os
 
@@ -7,6 +8,7 @@ from flask import (
 
 bp = Blueprint('page', __name__)
 CSV_PATH = os.path.join(os.path.dirname(__file__), 'static/pocitova_mapa_2023.csv')
+MARKERS = pd.read_csv(CSV_PATH)[['X', 'Y', 'Pocit', 'Pohlaví', 'Věk', 'Komentář']]
 
 @bp.route('/')
 def page():
@@ -14,9 +16,8 @@ def page():
 
 @bp.route('/get-markers', methods=['POST'])
 def get_markers():
-    markers = pd.read_csv(CSV_PATH)
-    markers = markers[['X', 'Y', 'Pocit']]
+    #start = time.time()
 
-    print(markers)
+    #print("time for json transform: ", time.time() - start)
 
-    return markers.to_json()
+    return MARKERS.to_json(orient="split")

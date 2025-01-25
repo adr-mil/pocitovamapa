@@ -39,7 +39,8 @@
                 }
 
                 let markers_json = await response.json()
-                console.log(markers_json)
+                // TODO: Remove
+                //console.log(markers_json)                
                 return markers_json
             } catch (error) {
                 console.error("Error fetching markers:", error)
@@ -47,7 +48,6 @@
         }
 
         fetchMarkers().then(markers_json => {
-            console.log("Markers:", markers_json['X'][0]);
 
             var markers = L.DonutCluster({
             chunkedLoading: true
@@ -61,28 +61,33 @@
                 }
             })
 
-            console.log(Object.values(markers_json['X']).length)
+            let length = markers_json['data'].length
 
-            for (var i = 0; i < Object.values(markers_json['X']).length; i++) {
-                var feeling = markers_json['Pocit'][i];
-                var marker = L.marker(L.latLng(markers_json['Y'][i], markers_json['X'][i]), {
-                    title: feeling
-                });
+            for (var i = 0; i < length; i++) {
+                var marker = L.marker(L.latLng(markers_json['data'][i][1], markers_json['data'][i][0]), {
+                    title: markers_json['data'][i][2]
+                })
 
-
-                marker.bindPopup(feeling);
-                markers.addLayer(marker);
+                marker.bindPopup(`
+                    <strong>${markers_json['data'][i][2]}</strong></br>
+                    <strong>Souřadnice:</strong> (${markers_json['data'][i][0]}, ${markers_json['data'][i][1]})</br>
+                    <strong>Pohlaví:</strong> ${markers_json['data'][i][3]}</br>
+                    <strong>Věk:</strong> ${markers_json['data'][i][4]}</br>
+                ` 
+                + (markers_json['data'][i][5] == " " ? "" : `
+                    <strong>Komentář:</strong> ${markers_json['data'][i][5]}`)
+                )
+                markers.addLayer(marker)
             }
             
-            var map = L.map('map').setView([49.836502, 18.295968], 10);
-            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
-            map.addLayer(markers);
+            var map = L.map('map').setView([49.836502, 18.295968], 10)
+            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map)
+            map.addLayer(markers)
         }).catch(error => {
-            console.error("Error:", error);
-        });
+            console.error("Error:", error)
+        })
         
         
     </script>
 </body>
-
 </html>
