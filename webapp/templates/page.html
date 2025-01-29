@@ -19,18 +19,38 @@
     <script src="{{ url_for('static', filename='Leaflet.DonutCluster.js') }}"></script>
     <link href="{{ url_for('static', filename='Leaflet.DonutCluster.css') }}" rel='stylesheet' />
 
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
     <link href="{{ url_for('static', filename='style.css')}}" rel="stylesheet" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 
 <body>
     <div id="map"></div>
+    <div id="genderGraph"></div>
     <script>
+        let map
+        let currentMarkers
+        let genderGraphElem = document.getElementById('genderGraph')
+        let filters = {
+            "Pohlaví": []
+        }
+
         async function fetchMarkers() {
             try {
                 let response = await fetch(
                     "{{ url_for('page.get_markers') }}",
                     {
                         method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            "filters": filters,
+                            "bounds": map.getBounds()
+                        })
                     }
                 )
 
@@ -38,17 +58,14 @@
                     throw new Error(`${response.status}`)
                 }
 
-                let markers_json = await response.json()
-                // TODO: Remove
-                //console.log(markers_json)                
+                let markers_json = await response.json()                
                 return markers_json
             } catch (error) {
                 console.error("Error fetching markers:", error)
             }
         }
 
-        fetchMarkers().then(markers_json => {
-
+        async function updateValues(json) {
             var markers = L.DonutCluster({
             chunkedLoading: true
             }, {
@@ -61,6 +78,8 @@
                 }
             })
 
+            markers_json = JSON.parse(json['markers'])
+            
             let length = markers_json['data'].length
 
             for (var i = 0; i < length; i++) {
@@ -80,14 +99,48 @@
                 markers.addLayer(marker)
             }
             
-            var map = L.map('map').setView([49.836502, 18.295968], 10)
-            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map)
+            if (currentMarkers != undefined) {
+                console.log("Removed prev layer")
+                map.removeLayer(currentMarkers)
+            }
+
             map.addLayer(markers)
+            currentMarkers = markers
+
+            // plots graphs and creates event handlers
+            let genderGraph = JSON.parse(json['genderGraph'])
+            Plotly.newPlot(genderGraphElem, genderGraph, {}).then(function() {
+                genderGraphElem.on('plotly_click', function(data){
+                    clicked = data["points"][0]["data"]["name"]
+
+                    const index = filters["Pohlaví"].indexOf(clicked);
+                    if (index > -1) {
+                        console.log("Removing: " + clicked + ", filters: " + filters["gender"])
+                        filters["Pohlaví"].splice(index, 1);
+                    }
+                    else {
+                        console.log("Adding: " + clicked + ", filters: " + filters["gender"])
+                        filters["Pohlaví"].push(clicked)
+                    }
+
+                    fetchMarkers().then(json => {
+                        updateValues(json)
+                    }).catch(error => {
+                        console.error("Error:", error)
+                    })
+                });
+            });
+        }
+
+        // init
+        map = L.map('map').setView([49.836502, 18.295968], 10)
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map)
+        fetchMarkers().then(json => {
+            updateValues(json)
         }).catch(error => {
             console.error("Error:", error)
         })
-        
-        
+        console.log("init complete");
     </script>
 </body>
 </html>
