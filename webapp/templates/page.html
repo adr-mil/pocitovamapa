@@ -29,12 +29,15 @@
 <body>
     <div id="map"></div>
     <div id="genderGraph"></div>
+    <div id="feelingGraph"></div>
     <script>
         let map
         let currentMarkers
         let genderGraphElem = document.getElementById('genderGraph')
+        let feelingGraphElem = document.getElementById('feelingGraph')
         let filters = {
-            "Pohlaví": []
+            "Pohlaví": [],
+            "Pocit": [],
         }
 
         async function fetchMarkers() {
@@ -109,7 +112,9 @@
 
             // plots graphs and creates event handlers
             let genderGraph = JSON.parse(json['genderGraph'])
-            Plotly.react(genderGraphElem, genderGraph, {})
+            Plotly.react('genderGraph', genderGraph, {})
+            let feelingGraph = JSON.parse(json['feelingGraph'])
+            Plotly.react('feelingGraph', feelingGraph, {})
         }
 
         async function fetchGraphs() {
@@ -143,6 +148,8 @@
         function updateGraphs(json) {
             let genderGraph = JSON.parse(json['genderGraph'])
             Plotly.react('genderGraph', genderGraph, {})
+            let feelingGraph = JSON.parse(json['feelingGraph'])
+            Plotly.react('feelingGraph', feelingGraph, {})
         }
 
         async function mapChangeHandler(event) {
@@ -178,6 +185,9 @@
             // Add functions handling clicks on bars
             genderGraphElem.on('plotly_click', data => {
                 graphClickHandler(data, "Pohlaví")
+            })
+            feelingGraphElem.on('plotly_click', data => {
+                graphClickHandler(data, "Pocit")
             })
         }).catch(error => {
             console.error("Error:", error)

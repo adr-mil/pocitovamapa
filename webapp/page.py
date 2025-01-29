@@ -11,6 +11,10 @@ from flask import (
 bp = Blueprint('page', __name__)
 CSV_PATH = os.path.join(os.path.dirname(__file__), 'static/pocitova_mapa_2023.csv')
 MARKERS = pd.read_csv(CSV_PATH)[['X', 'Y', 'Pocit', 'Pohlaví', 'Věk', 'Komentář']]
+GRAPH_LIST = [
+    ("genderGraph", "Počet záznamů podle pohlaví", "Pohlaví"),
+    ("feelingGraph", "Počet záznamů podle pocitu", "Pocit"),
+]
 
 @bp.route('/')
 def page():
@@ -28,57 +32,80 @@ def create_graphs(filters, bounds):
         (filtered_markers['Y'] < bounds["_northEast"]["lat"])
     ]
 
-    gender_total_count = MARKERS['Pohlaví'].value_counts().reset_index()
-    gender_total_count["type"] = "Celkový<br>počet"
-
-    gender_filter_count = filtered_markers['Pohlaví'].value_counts().reset_index()
-    gender_filter_count["type"] = "Po filtrování"
-
-    in_bounds_count = in_bounds_markers['Pohlaví'].value_counts().reset_index()
-    in_bounds_count["type"] = "Současný<br>úsek mapy"
-
-    gender_group_count = pd.concat([gender_total_count, gender_filter_count, in_bounds_count])
-    gender_group_count = gender_group_count.rename(columns={"count": "Počet"})
-    print(gender_group_count)
-
     colors = get_colors(filters)
+    graph_dict = {}
 
-    genderGraph = px.bar(gender_group_count, x='type', 
-                         y="Počet", 
-                         title="Počet záznamů podle pohlaví",
-                         color='Pohlaví',
-                         color_discrete_map=colors,
-                         barmode="group",
-                         )
+    for graph_name, graph_title, variable in GRAPH_LIST:
 
-    genderGraph.update_layout(legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=1,
-        xanchor="left",
-        x=0,
-        ),
-        legend_title=None,
-        autosize=True,
-    )
+        total_count = MARKERS[variable].value_counts().reset_index()
+        total_count["type"] = "Celkový<br>počet"
 
-    graph_dict = {
-        "genderGraph": genderGraph.to_json()
-    }
+        filter_count = filtered_markers[variable].value_counts().reset_index()
+        filter_count["type"] = "Po filtrování"
+
+        in_bounds_count = in_bounds_markers[variable].value_counts().reset_index()
+        in_bounds_count["type"] = "Současný<br>úsek mapy"
+
+        counts = pd.concat([total_count, filter_count, in_bounds_count])
+        counts = counts.rename(columns={"count": "Počet"})
+        print(counts)
+
+        graph = px.bar(counts, x='type', 
+                            y="Počet", 
+                            title=graph_title,
+                            color=variable,
+                            color_discrete_map=colors,
+                            barmode="group",
+                            )
+
+        graph.update_layout(legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1,
+            xanchor="left",
+            x=0,
+            ),
+            legend_title=None,
+            autosize=True,
+        )
+
+        graph_dict[graph_name] = graph.to_json()
 
     return (graph_dict, filtered_markers)
 
 def get_colors(filters):
     colors = {
-        "muž": color.Set1[1] 
-                if "muž" not in filters['Pohlaví'] 
-                else color.Pastel1[1], 
-        "žena": color.Set1[0] 
-                if "žena" not in filters['Pohlaví'] 
-                else color.Pastel1[0], 
-        "nechci odpovídat": color.Set1[2] 
-                if "nechci odpovídat" not in filters['Pohlaví'] 
-                else color.Pastel1[2]
+        "muž": 
+            color.Set1[1] 
+            if "muž" not in filters['Pohlaví'] 
+            else color.Pastel1[1], 
+        "žena": 
+            color.Set1[0] 
+            if "žena" not in filters['Pohlaví'] 
+            else color.Pastel1[0], 
+        "nechci odpovídat": 
+            color.Set1[2] 
+            if "nechci odpovídat" not in filters['Pohlaví'] 
+            else color.Pastel1[2],
+        "Místo, kde se cítím dobře":
+            "green" 
+            if "Místo, kde se cítím dobře" not in filters['Pocit'] 
+            else "lightgreen",
+        "Místo, které doporučím návštěvníkům":
+            "yellow"
+            if "Místo, které doporučím návštěvníkům" 
+                not in filters['Pocit'] 
+            else color.Pastel1[5],
+        "Místo, kde se necítím dobře":
+            color.Set1[0]
+            if "Místo, kde se necítím dobře" 
+                not in filters['Pocit'] 
+            else color.Pastel1[0],
+        "Místo, které by se mělo rozvíjet":
+            "orange"
+            if "Místo, které by se mělo rozvíjet"
+                not in filters['Pocit'] 
+            else color.Pastel1[4],
     }
 
     return colors
