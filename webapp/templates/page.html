@@ -65,7 +65,7 @@
             }
         }
 
-        async function updateValues(json) {
+        async function updateAll(json) {
             var markers = L.DonutCluster({
             chunkedLoading: true
             }, {
@@ -109,34 +109,76 @@
 
             // plots graphs and creates event handlers
             let genderGraph = JSON.parse(json['genderGraph'])
-            Plotly.newPlot(genderGraphElem, genderGraph, {}).then(function() {
-                genderGraphElem.on('plotly_click', function(data){
-                    clicked = data["points"][0]["data"]["name"]
+            Plotly.react(genderGraphElem, genderGraph, {})
+        }
 
-                    const index = filters["Pohlaví"].indexOf(clicked);
-                    if (index > -1) {
-                        console.log("Removing: " + clicked + ", filters: " + filters["gender"])
-                        filters["Pohlaví"].splice(index, 1);
+        async function fetchGraphs() {
+            try {
+                let response = await fetch(
+                    "{{ url_for('page.get_graphs') }}",
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            "filters": filters,
+                            "bounds": map.getBounds()
+                        })
                     }
-                    else {
-                        console.log("Adding: " + clicked + ", filters: " + filters["gender"])
-                        filters["Pohlaví"].push(clicked)
-                    }
+                )
 
-                    fetchMarkers().then(json => {
-                        updateValues(json)
-                    }).catch(error => {
-                        console.error("Error:", error)
-                    })
-                });
-            });
+                if (!response.ok) {
+                    throw new Error(`${response.status}`)
+                }
+
+                let graphs_json = await response.json()                
+                return graphs_json
+            } catch (error) {
+                console.error("Error fetching graph data:", error)
+            }
+        }
+
+        function updateGraphs(json) {
+            let genderGraph = JSON.parse(json['genderGraph'])
+            Plotly.react('genderGraph', genderGraph, {})
+        }
+
+        async function mapChangeHandler(event) {
+            fetchGraphs().then(json => updateGraphs(json))
+            console.log('map change event')
+        }
+
+        function graphClickHandler(clickData, filter_name) {
+            clicked = clickData["points"][0]["data"]["name"]
+
+            const index = filters[filter_name].indexOf(clicked)
+            if (index > -1) {
+                filters[filter_name].splice(index, 1)
+            }
+            else {
+                filters[filter_name].push(clicked)
+            }
+
+            fetchMarkers().then(json => {
+                updateAll(json)
+            }).catch(error => {
+                console.error("Error:", error)
+            })
         }
 
         // init
         map = L.map('map').setView([49.836502, 18.295968], 10)
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map)
+        map.on('moveend', mapChangeHandler)
         fetchMarkers().then(json => {
-            updateValues(json)
+            updateAll(json)
+
+            // Add functions handling clicks on bars
+            genderGraphElem.on('plotly_click', data => {
+                graphClickHandler(data, "Pohlaví")
+            })
         }).catch(error => {
             console.error("Error:", error)
         })

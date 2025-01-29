@@ -1,6 +1,7 @@
 #import time
 import pandas as pd
 import plotly.express as px
+from plotly.express.colors import qualitative as color
 import os
 
 from flask import (
@@ -15,15 +16,7 @@ MARKERS = pd.read_csv(CSV_PATH)[['X', 'Y', 'Pocit', 'Pohlaví', 'Věk', 'Koment�
 def page():
     return render_template("page.html")
 
-@bp.route('/get-markers', methods=['POST'])
-def get_markers():
-    filters = request.json["filters"]
-    print("Filters: ", filters)
-
-    bounds = request.json["bounds"]
-    print("Bounds: ")
-    print(bounds)
-
+def create_graphs(filters, bounds):
     filtered_markers = MARKERS
     for key in filters.keys():
         filtered_markers = filtered_markers[~filtered_markers[key].isin(filters[key])]
@@ -35,9 +28,6 @@ def get_markers():
         (filtered_markers['Y'] < bounds["_northEast"]["lat"])
     ]
 
-    #print(in_bounds_markers)
-
-    #start = time.time()
     gender_total_count = MARKERS['Pohlaví'].value_counts().reset_index()
     gender_total_count["type"] = "Celkový<br>počet"
 
@@ -51,17 +41,7 @@ def get_markers():
     gender_group_count = gender_group_count.rename(columns={"count": "Počet"})
     print(gender_group_count)
 
-    colors = {
-        "muž": px.colors.qualitative.Set1[1] 
-                if "muž" not in filters['Pohlaví'] 
-                else px.colors.qualitative.Pastel1[1], 
-        "žena": px.colors.qualitative.Set1[0] 
-                if "žena" not in filters['Pohlaví'] 
-                else px.colors.qualitative.Pastel1[0], 
-        "nechci odpovídat": px.colors.qualitative.Set1[2] 
-                if "nechci odpovídat" not in filters['Pohlaví'] 
-                else px.colors.qualitative.Pastel1[2]
-    }
+    colors = get_colors(filters)
 
     genderGraph = px.bar(gender_group_count, x='type', 
                          y="Počet", 
@@ -82,9 +62,42 @@ def get_markers():
         autosize=True,
     )
 
-    #print("time for json transform: ", time.time() - start)
-
-    return {
-        "markers": filtered_markers.to_json(orient="split"),
+    graph_dict = {
         "genderGraph": genderGraph.to_json()
-        }
+    }
+
+    return (graph_dict, filtered_markers)
+
+def get_colors(filters):
+    colors = {
+        "muž": color.Set1[1] 
+                if "muž" not in filters['Pohlaví'] 
+                else color.Pastel1[1], 
+        "žena": color.Set1[0] 
+                if "žena" not in filters['Pohlaví'] 
+                else color.Pastel1[0], 
+        "nechci odpovídat": color.Set1[2] 
+                if "nechci odpovídat" not in filters['Pohlaví'] 
+                else color.Pastel1[2]
+    }
+
+    return colors
+
+@bp.route('/get-markers', methods=['POST'])
+def get_markers():
+    filters = request.json["filters"]
+    bounds = request.json["bounds"]
+
+    output_dict, filtered_markers = create_graphs(filters, bounds)
+    output_dict["markers"] = filtered_markers.to_json(orient="split")
+
+    return output_dict
+
+@bp.route('/get-graphs', methods=['POST'])
+def get_graphs():
+    filters = request.json["filters"]
+    bounds = request.json["bounds"]
+
+    output_dict, _ = create_graphs(filters, bounds)
+
+    return output_dict
