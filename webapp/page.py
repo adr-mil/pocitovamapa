@@ -11,9 +11,12 @@ from flask import (
 bp = Blueprint('page', __name__)
 CSV_PATH = os.path.join(os.path.dirname(__file__), 'static/pocitova_mapa_2023.csv')
 MARKERS = pd.read_csv(CSV_PATH)[['X', 'Y', 'Pocit', 'Pohlaví', 'Věk', 'Komentář']]
+MARKERS['Věk'] = MARKERS['Věk'].fillna("neznámý")
+MARKERS['Věk'] = MARKERS['Věk'].replace("nechci-odpovidat", "neznámý")
 GRAPH_LIST = [
     ("genderGraph", "Počet záznamů podle pohlaví", "Pohlaví"),
     ("feelingGraph", "Počet záznamů podle pocitu", "Pocit"),
+    ("ageGraph", "Počet záznamů podle věku", "Věk"),
 ]
 
 @bp.route('/')
@@ -51,12 +54,17 @@ def create_graphs(filters, bounds):
         print(counts)
 
         graph = px.bar(counts, x='type', 
-                            y="Počet", 
-                            title=graph_title,
-                            color=variable,
-                            color_discrete_map=colors,
-                            barmode="group",
-                            )
+                    y="Počet", 
+                    title=graph_title,
+                    color=variable,
+                    color_discrete_map=colors,
+                    barmode="group",
+                    category_orders={
+                        "Věk": [
+                            "0-14", "15-24", "25-34", "35-44", 
+                            "45-54", "55-64", "65+", "neznámý"
+                        ]
+                    })
 
         graph.update_layout(legend=dict(
             orientation="h",
@@ -107,6 +115,17 @@ def get_colors(filters):
                 not in filters['Pocit'] 
             else color.Pastel1[4],
     }
+
+    ageList = [
+        "0-14", "15-24", "25-34", "35-44", 
+        "45-54", "55-64", "65+", "neznámý"
+    ]
+
+    for i, age in enumerate(ageList):
+        colors[age] = \
+            color.Dark2[i] \
+            if age not in filters['Věk'] \
+            else color.Pastel2[i]
 
     return colors
 

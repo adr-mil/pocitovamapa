@@ -9,11 +9,16 @@ body {
 }
 
 #genderGraph {
-    width: 30vw;
-    height: 30vw;
+    width: 45vw;
+    height: 25vw;
 }
 
 #feelingGraph {
-    width: 40vw;
-    height: 30vw;
+    width: 45vw;
+    height: 25vw;
+}
+
+#ageGraph {
+    width: 45vw;
+    height: 25vw;
 }
