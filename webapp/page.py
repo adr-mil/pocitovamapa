@@ -81,7 +81,7 @@ def create_graphs(filters, bounds):
         in_bounds_count = in_bounds_count.rename(columns={"count": "Počet"})
         graph_in_bounds = px.bar(in_bounds_count, x='type', 
                     y="Počet", 
-                    title=graph_title + " - Současný úsek mapy",
+                    title=graph_title + " - aktuálně na mapě",
                     color=variable,
                     color_discrete_map=colors,
                     barmode="group",

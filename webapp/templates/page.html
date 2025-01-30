@@ -55,6 +55,74 @@
             "Věk": []
         }
 
+        let MarkerIcon = L.Icon.extend({
+            options: {
+                iconSize: [18, 32],
+                iconAnchor: [9, 32],
+                popupAnchor: [-3, -31]
+            }
+        })
+
+        let redMarker = new MarkerIcon(
+            {iconUrl: "{{ url_for('static', filename='marker_red.png') }}"}
+        )
+        let redMarkerFull = new MarkerIcon(
+            {iconUrl: "{{ url_for('static', filename='marker_red_full.png') }}"}
+        )
+        let greenMarker = new MarkerIcon(
+            {iconUrl: "{{ url_for('static', filename='marker_green.png') }}"}
+        )
+        let greenMarkerFull = new MarkerIcon(
+            {iconUrl: "{{ url_for('static', filename='marker_green_full.png') }}"}
+        )
+        let orangeMarker = new MarkerIcon(
+            {iconUrl: "{{ url_for('static', filename='marker_orange.png') }}"}
+        )
+        let orangeMarkerFull = new MarkerIcon(
+            {iconUrl: "{{ url_for('static', filename='marker_orange_full.png') }}"}
+        )
+        let yellowMarker = new MarkerIcon(
+            {iconUrl: "{{ url_for('static', filename='marker_yellow.png') }}"}
+        )
+        let yellowMarkerFull = new MarkerIcon(
+            {iconUrl: "{{ url_for('static', filename='marker_yellow_full.png') }}"}
+        )
+        let markersIcons = {
+            "redMarker": redMarker,
+            "redMarkerFull": redMarkerFull,
+            "greenMarker": greenMarker,
+            "greenMarkerFull": greenMarkerFull,
+            "orangeMarker": orangeMarker,
+            "orangeMarkerFull": orangeMarkerFull,
+            "yellowMarker": yellowMarker,
+            "yellowMarkerFull": yellowMarkerFull
+        }
+
+        function getIcon(feeling, comment) {
+            iconName = ""
+
+            if (feeling == "Místo, kde se cítím dobře") {
+                iconName += "green"
+            }
+            else if (feeling == "Místo, kde se necítím dobře") {
+                iconName += "red"
+            }
+            else if (feeling == "Místo, které doporučím návštěvníkům") {
+                iconName += "yellow"
+            }
+            else{
+                iconName += "orange"
+            }
+
+            iconName += "Marker"
+
+            if (comment == " ") {
+                iconName += "Full"
+            }
+
+            return markersIcons[iconName]
+        }
+
         async function fetchMarkers() {
             try {
                 let response = await fetch(
@@ -105,8 +173,12 @@
             let length = markers_json['data'].length
 
             for (var i = 0; i < length; i++) {
+                let markerIcon = getIcon(markers_json['data'][i][2], 
+                                        markers_json['data'][i][5])
+
                 var marker = L.marker(L.latLng(markers_json['data'][i][1], markers_json['data'][i][0]), {
-                    title: markers_json['data'][i][2]
+                    title: markers_json['data'][i][2],
+                    icon: markerIcon
                 })
 
                 marker.bindPopup(`
