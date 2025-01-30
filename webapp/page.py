@@ -41,13 +41,13 @@ def create_graphs(filters, bounds):
     for graph_name, graph_title, variable in GRAPH_LIST:
 
         total_count = MARKERS[variable].value_counts().reset_index()
-        total_count["type"] = "Celkový<br>počet"
+        total_count["type"] = "Celkový<br>dataset"
 
         filter_count = filtered_markers[variable].value_counts().reset_index()
-        filter_count["type"] = "Po filtrování"
+        filter_count["type"] = "Po aplikaci filtrů"
 
         in_bounds_count = in_bounds_markers[variable].value_counts().reset_index()
-        in_bounds_count["type"] = "Současný<br>úsek mapy"
+        in_bounds_count["type"] = "Aktuálně na mapě"
 
         counts = pd.concat([total_count, filter_count, in_bounds_count])
         counts = counts.rename(columns={"count": "Počet"})
@@ -59,6 +59,7 @@ def create_graphs(filters, bounds):
                     color=variable,
                     color_discrete_map=colors,
                     barmode="group",
+                    labels=dict(type=variable + " podle výběru dat"),
                     category_orders={
                         "Věk": [
                             "0-14", "15-24", "25-34", "35-44", 
@@ -77,7 +78,35 @@ def create_graphs(filters, bounds):
             autosize=True,
         )
 
+        in_bounds_count = in_bounds_count.rename(columns={"count": "Počet"})
+        graph_in_bounds = px.bar(in_bounds_count, x='type', 
+                    y="Počet", 
+                    title=graph_title + " - Současný úsek mapy",
+                    color=variable,
+                    color_discrete_map=colors,
+                    barmode="group",
+                    labels=dict(type=variable),
+                    category_orders={
+                        "Věk": [
+                            "0-14", "15-24", "25-34", "35-44", 
+                            "45-54", "55-64", "65+", "neznámý"
+                        ]
+                    })
+        
+        graph_in_bounds.update_xaxes(showticklabels=False)
+        graph_in_bounds.update_layout(legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1,
+            xanchor="left",
+            x=0,
+            ),
+            legend_title=None,
+            autosize=True,
+        )
+
         graph_dict[graph_name] = graph.to_json()
+        graph_dict[graph_name + "CurrentMap"] = graph_in_bounds.to_json()
 
     return (graph_dict, filtered_markers)
 

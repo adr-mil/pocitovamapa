@@ -3,22 +3,60 @@ body {
     padding: 0;
 }
 
-#map {
+#all {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+}
+
+#topmodule {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    height: 80vh;
+}
+
+#topgraphs {
+    display: flex;
+    flex-direction: column;
     width: 50vw;
-    height: 50vw;
+    height: 80vh;
+}
+
+#map {
+    /* width: 50%;
+    height: 50%; */
+    width: 50vw;
+    height: 60vh;
 }
 
 #genderGraph {
+    width: 50vw;
+    height: 40vh;
+}
+
+#genderGraphCurrentMap {
     width: 45vw;
-    height: 25vw;
+    height: 40vh;
 }
 
 #feelingGraph {
     width: 45vw;
-    height: 25vw;
+    height: 40vh;
+}
+
+#feelingGraphCurrentMap {
+    width: 45vw;
+    height: 40vh;
 }
 
 #ageGraph {
     width: 45vw;
-    height: 25vw;
+    height: 40vh;
+}
+
+#ageGraphCurrentMap {
+    width: 45vw;
+    height: 40vh;
 }

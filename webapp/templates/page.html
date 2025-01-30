@@ -27,16 +27,28 @@
 </head>
 
 <body>
-    <div id="map"></div>
-    <div id="genderGraph"></div>
-    <div id="feelingGraph"></div>
-    <div id="ageGraph"></div>
+    <div id="all">
+        <div id="topmodule">
+            <div id="map"></div>
+            <div id="topgraphs">
+                <div id="genderGraph"></div>
+                <div id="genderGraphCurrentMap"></div>
+            </div>
+        </div>
+        
+        <div id="graphs">
+            <div id="feelingGraph"></div>
+            <div id="feelingGraphCurrentMap"></div>
+            <div id="ageGraph"></div>
+            <div id="ageGraphCurrentMap"></div>
+        </div>
+    </div>
     <script>
         let map
         let currentMarkers
-        let genderGraphElem = document.getElementById('genderGraph')
-        let feelingGraphElem = document.getElementById('feelingGraph')
-        let ageGraphElem = document.getElementById('ageGraph')
+        let graphList = [["genderGraph", "Pohlaví"], 
+                        ["feelingGraph", "Pocit"], 
+                        ["ageGraph", "Věk"]]
         let filters = {
             "Pohlaví": [],
             "Pocit": [],
@@ -72,6 +84,10 @@
         }
 
         async function updateAll(json) {
+            // plots graphs and creates event handlers
+            updateGraphs(json)
+
+            // replace old markers
             var markers = L.DonutCluster({
             chunkedLoading: true
             }, {
@@ -95,7 +111,7 @@
 
                 marker.bindPopup(`
                     <strong>${markers_json['data'][i][2]}</strong></br>
-                    <strong>Souřadnice:</strong> (${markers_json['data'][i][0]}, ${markers_json['data'][i][1]})</br>
+                    <strong>Souřadnice:</strong> ${markers_json['data'][i][1]}N, ${markers_json['data'][i][0]}E</br>
                     <strong>Pohlaví:</strong> ${markers_json['data'][i][3]}</br>
                     <strong>Věk:</strong> ${markers_json['data'][i][4]}</br>
                 ` 
@@ -112,14 +128,6 @@
 
             map.addLayer(markers)
             currentMarkers = markers
-
-            // plots graphs and creates event handlers
-            let genderGraph = JSON.parse(json['genderGraph'])
-            Plotly.react('genderGraph', genderGraph, {})
-            let feelingGraph = JSON.parse(json['feelingGraph'])
-            Plotly.react('feelingGraph', feelingGraph, {})
-            let ageGraph = JSON.parse(json['ageGraph'])
-            Plotly.react('ageGraph', ageGraph, {})
         }
 
         async function fetchGraphs() {
@@ -151,12 +159,11 @@
         }
 
         function updateGraphs(json) {
-            let genderGraph = JSON.parse(json['genderGraph'])
-            Plotly.react('genderGraph', genderGraph, {})
-            let feelingGraph = JSON.parse(json['feelingGraph'])
-            Plotly.react('feelingGraph', feelingGraph, {})
-            let ageGraph = JSON.parse(json['ageGraph'])
-            Plotly.react('ageGraph', ageGraph, {})
+            for (graph of graphList) {
+                Plotly.react(graph[0], JSON.parse(json[graph[0]]), {})
+                Plotly.react(graph[0] + 'CurrentMap', 
+                        JSON.parse(json[graph[0] + 'CurrentMap']), {})
+            }
         }
 
         async function mapChangeHandler(event) {
@@ -190,15 +197,19 @@
             updateAll(json)
 
             // Add functions handling clicks on bars
-            genderGraphElem.on('plotly_click', data => {
-                graphClickHandler(data, "Pohlaví")
-            })
-            feelingGraphElem.on('plotly_click', data => {
-                graphClickHandler(data, "Pocit")
-            })
-            ageGraphElem.on('plotly_click', data => {
-                graphClickHandler(data, "Věk")
-            })
+            for (graph of graphList) {
+                let graphName = graph[0]
+                let graphVariable = graph[1]
+
+                document.getElementById(graphName).on(
+                    'plotly_click', data => {
+                        graphClickHandler(data, graphVariable)
+                    })
+                document.getElementById(graphName + 'CurrentMap').on(
+                    'plotly_click', data => {
+                        graphClickHandler(data, graphVariable)
+                    })
+            }
         }).catch(error => {
             console.error("Error:", error)
         })
