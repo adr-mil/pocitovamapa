@@ -5,7 +5,7 @@ from plotly.express.colors import qualitative as color
 import os
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, render_template, request
 )
 
 bp = Blueprint('page', __name__)
@@ -52,7 +52,6 @@ def create_graphs(filters, bounds):
 
         counts = pd.concat([total_count, filter_count, in_bounds_count])
         counts = counts.rename(columns={"count": "Počet"})
-        print(counts)
 
         graph = px.bar(counts, x='type', 
                     y="Počet", 

@@ -199,10 +199,9 @@
         }
 
         async function updateAll(json) {
-            // plots graphs and creates event handlers
             updateGraphs(json)
 
-            // replace old markers
+            // Creates a new layer for the loaded markers
             var markers = L.DonutCluster({
             chunkedLoading: true
             }, {
@@ -241,7 +240,6 @@
             }
             
             if (currentMarkers != undefined) {
-                console.log("Removed prev layer")
                 map.removeLayer(currentMarkers)
             }
 
@@ -285,11 +283,12 @@
             }
         }
 
+        // Fires upon a move event in the map
         async function mapChangeHandler(event) {
             fetchGraphs().then(json => updateGraphs(json))
-            console.log('map change event')
         }
 
+        // Event handler for filtering by clicking on bars
         function graphClickHandler(clickData, filter_name) {
             clicked = clickData["points"][0]["data"]["name"]
 
@@ -332,7 +331,6 @@
         }).catch(error => {
             console.error("Error:", error)
         })
-        console.log("init complete");
     </script>
 </body>
 </html>
