@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Test</title>
+    <title>Pocitová mapa Ostravy 2023</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
      crossorigin=""/>
@@ -22,25 +22,72 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
     <link href="{{ url_for('static', filename='style.css')}}" rel="stylesheet" />
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 
 <body>
     <div id="all">
         <div id="topmodule">
             <div id="map"></div>
-            <div id="topgraphs">
-                <div id="genderGraph"></div>
-                <div id="genderGraphCurrentMap"></div>
+            <div id="text">
+                <h1>Pocitová mapa Ostravy 2023</h1>
+                <p><a href="https://opendata.ostrava.cz/pocitova-mapa-mist-2023/">Zdroj dat</a></p>
+                <h2>Jak aplikaci používat</h2>
+                <div class="marker-legend">
+                    <div class="marker-legend-item">
+                        <img src="{{ url_for('static', filename='marker_red.png') }}" alt="Mapová značka s kolečkem">
+                        <p>Záznam s komentářem</p>
+                    </div>
+                    <div class="marker-legend-item">
+                        <img src="{{ url_for('static', filename='marker_red_full.png') }}" alt="Mapová značka bez kolečka">
+                        <p>Záznam bez komentáře</p>
+                    </div>
+                </div>
+                <p>Vysvětlivky kategorií dat v grafech:</p>
+                <dl>
+                    <dt>
+                        Celkový dataset
+                    </dt>
+                    <dd>
+                        Všechny záznamy v datasetu bez ohledu 
+                        na aplikaci filtrů.
+                    </dd>
+                    <dt>
+                        Po aplikaci filtrů
+                    </dt>
+                    <dd>
+                        Zbylé údaje po odebrání záznamů s hodnotami označenými
+                        pomocí sloupců v grafech. 
+                        Reprezentuje načtené záznamy na celé mapě 
+                        (bez ohledu na zobrazený úsek mapy).
+                    </dd>
+                    <dt>
+                        Aktuálně na mapě
+                    </dt>
+                    <dd>
+                        Zázmamy obsažené v zobrazené části mapy.
+                    </dd>
+                </dl>
+                <p>
+                    Pro omezení zobrazených záznamů na mapě a v 
+                    grafech klikněte na příslušný sloupec s hodnotou, jejíž záznamy chcete odstranit.
+                    Pro opětovné zobrazení vyberte daný (nyní zašedlý) sloupec v sekci "Celkový dataset".
+                </p>
             </div>
         </div>
         
         <div id="graphs">
-            <div id="feelingGraph"></div>
-            <div id="feelingGraphCurrentMap"></div>
-            <div id="ageGraph"></div>
-            <div id="ageGraphCurrentMap"></div>
+            <div class="graph-group">
+                <div class="graph" id="feelingGraph"></div>
+                <div class="graph" id="feelingGraphCurrentMap"></div>
+            </div>
+            <div class="graph-group">
+                <div class="graph" id="genderGraph"></div>
+                <div class="graph" id="genderGraphCurrentMap"></div>
+            </div>
+            <div class="graph-group">
+                <div class="graph" id="ageGraph"></div>
+                <div class="graph" id="ageGraphCurrentMap"></div>
+            </div>
         </div>
     </div>
     <script>
