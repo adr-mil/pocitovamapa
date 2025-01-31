@@ -51,10 +51,10 @@ def create_graphs(filters, bounds):
         in_bounds_count["type"] = "Aktuálně na mapě"
 
         counts = pd.concat([total_count, filter_count, in_bounds_count])
-        counts = counts.rename(columns={"count": "Počet"})
+        counts = counts.rename(columns={"count": "Počet záznamů"})
 
         graph = px.bar(counts, x='type', 
-                    y="Počet", 
+                    y="Počet záznamů", 
                     title=graph_title,
                     color=variable,
                     color_discrete_map=colors,
@@ -78,9 +78,9 @@ def create_graphs(filters, bounds):
             autosize=True,
         )
 
-        in_bounds_count = in_bounds_count.rename(columns={"count": "Počet"})
+        in_bounds_count = in_bounds_count.rename(columns={"count": "Počet záznamů"})
         graph_in_bounds = px.bar(in_bounds_count, x='type', 
-                    y="Počet", 
+                    y="Počet záznamů", 
                     title=graph_title + " - aktuálně na mapě",
                     color=variable,
                     color_discrete_map=colors,
