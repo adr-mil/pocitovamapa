@@ -13,6 +13,7 @@ CSV_PATH = os.path.join(os.path.dirname(__file__), 'static/pocitova_mapa_2023.cs
 MARKERS = pd.read_csv(CSV_PATH)[['X', 'Y', 'Pocit', 'Pohlaví', 'Věk', 'Komentář']]
 MARKERS['Věk'] = MARKERS['Věk'].fillna("neznámý")
 MARKERS['Věk'] = MARKERS['Věk'].replace("nechci-odpovidat", "neznámý")
+MARKERS['Věk'] = MARKERS['Věk'].replace(["0-14", "15-24"], "0-24")
 GRAPH_LIST = [
     ("genderGraph", "Počet záznamů podle pohlaví", "Pohlaví"),
     ("feelingGraph", "Počet záznamů podle pocitu", "Pocit"),
@@ -62,7 +63,7 @@ def create_graphs(filters, bounds):
                     labels=dict(type=variable + " podle výběru dat"),
                     category_orders={
                         "Věk": [
-                            "0-14", "15-24", "25-34", "35-44", 
+                            "0-24", "25-34", "35-44", 
                             "45-54", "55-64", "65+", "neznámý"
                         ]
                     })
@@ -88,7 +89,7 @@ def create_graphs(filters, bounds):
                     labels=dict(type=variable),
                     category_orders={
                         "Věk": [
-                            "0-14", "15-24", "25-34", "35-44", 
+                            "0-24", "25-34", "35-44", 
                             "45-54", "55-64", "65+", "neznámý"
                         ]
                     })
@@ -143,11 +144,16 @@ def get_colors(filters):
             if "Místo, které by se mělo rozvíjet"
                 not in filters['Pocit'] 
             else color.Pastel1[4],
+        "neznámý":
+            color.Dark2[7]
+            if "neznámý"
+                not in filters['Věk']
+            else color.Pastel2[7],
     }
 
     ageList = [
-        "0-14", "15-24", "25-34", "35-44", 
-        "45-54", "55-64", "65+", "neznámý"
+        "0-24", "25-34", "35-44", 
+        "45-54", "55-64", "65+"
     ]
 
     for i, age in enumerate(ageList):
